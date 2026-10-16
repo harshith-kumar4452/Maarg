@@ -460,7 +460,7 @@ Hosted on:
 
 ### Database
 
-**PostgreSQL**
+**PostgreSQL** · [Interactive Database Schema & ERD Documentation](DATABASE_SCHEMA.html)
 
 ### Authentication
 

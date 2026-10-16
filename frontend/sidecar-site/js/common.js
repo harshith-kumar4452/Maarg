@@ -33,7 +33,7 @@ function navHTML() {
   return `<header class="nav">
     <a class="logo" href="index.html" aria-label="MAARG home">${LOGO}<span>MAARG</span></a>
     <nav class="nav-links" id="navLinks" aria-label="Primary">
-      <a href="index.html#engines">Engines</a><a href="index.html#roles">Roles</a><a href="architecture.html">Architecture</a><a href="${mine}">${acc ? "My portal" : "Sign in"}</a>
+      <a href="index.html#engines">Engines</a><a href="index.html#roles">Roles</a><a href="architecture.html">Architecture</a><a href="schema.html">Schema</a><a href="${mine}">${acc ? "My portal" : "Sign in"}</a>
     </nav>
     <div class="nav-cta">
       ${acc ? `<span class="pill nav-who">${ic("user").replace("<svg", '<svg width="14" height="14"')}${acc.label}</span>` : ""}
@@ -52,7 +52,7 @@ function footHTML() {
   return `<footer class="foot wrap">
     <div><a class="logo" href="index.html">${LOGO}<span>MAARG</span></a><p style="margin-top:12px;max-width:36ch">MAARG means “path”. It predicts where cargo goes missing and brings it home on vehicles already heading that way.</p></div>
     <div class="cols">
-      <div><h4>Explore</h4><a href="index.html#engines">Engines</a><a href="index.html#how">How it works</a><a href="index.html#roles">Four roles</a><a href="index.html#heat">Risk heat map</a><a href="architecture.html">Architecture</a></div>
+      <div><h4>Explore</h4><a href="index.html#engines">Engines</a><a href="index.html#how">How it works</a><a href="index.html#roles">Four roles</a><a href="index.html#heat">Risk heat map</a><a href="architecture.html">Architecture</a><a href="schema.html">Database Schema</a></div>
       <div><h4>Sign in as</h4><a href="login.html?role=admin">Admin</a><a href="login.html?role=dispatcher">Dispatcher</a><a href="login.html?role=driver">Driver</a><a href="login.html?role=customer">Customer</a></div>
       <div><h4>Quick reference</h4><span>Urgency: λ = SLA penalty × (1 + T ÷ 50)</span><br><span>Bounty: pay = min(2nd-lowest bid, MaxBounty)</span><br><span>Ceiling: MaxBounty = min(λ × Δt, C_ded − C_overhead)</span></div>
     </div></footer>`;
