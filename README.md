@@ -8,7 +8,7 @@ Instead of treating reverse logistics as a simple **A → B routing problem**, M
 
 > **Don't just route the package. Find the best future for it.**
 
-🌐 **Live Platform:** https://maarg-three.vercel.app/
+🌐 **Live Platform:**
 
 ---
 
