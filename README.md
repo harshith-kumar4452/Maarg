@@ -473,7 +473,7 @@ Hosted on:
 ## Clone the repository
 
 ```bash
-git clone https://github.com/SathwikPrabhu-07/Maarg.git
+https://github.com/harshith-kumar4452/Maarg.git
 cd Maarg
 ```
 
