@@ -163,8 +163,14 @@ svg.edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .zoom button:hover{background:var(--soft)}
 .zoom .pct{font-size:10.5px;color:var(--muted);text-align:center;padding:2px 0}
 .keybtn{left:14px;bottom:14px}
-.keybtn>button{border:none;background:none;padding:8px 12px;cursor:pointer;font-size:0.85rem;font-weight:500}
-.keybody{display:none;padding:4px 14px 12px;font-size:0.82rem;gap:7px;min-width:240px}
+.keyhdr{display:flex;align-items:center;justify-content:space-between}
+.keyhdr>button{border:none;background:none;padding:8px 12px;cursor:pointer;font-size:0.85rem;font-weight:500;display:inline-flex;align-items:center;gap:7px}
+.keyhdr>button:hover{color:var(--focus)}
+.keyclose{display:none;border:none;background:var(--soft);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:14px;line-height:1;margin-right:8px;color:var(--muted);align-items:center;justify-content:center;transition:background .15s,color .15s}
+.keyclose:hover{background:var(--line);color:var(--ink)}
+.keybtn.open .keyclose{display:inline-flex}
+.keybtn.open .keyhdr{border-bottom:1px solid var(--soft)}
+.keybody{display:none;padding:8px 14px 12px;font-size:0.82rem;gap:7px;min-width:260px}
 .keybtn.open .keybody{display:grid}
 .keybody div{display:flex;align-items:center;gap:9px}
 .keybody kbd{font-family:var(--mono);font-size:0.74rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--surface)}
@@ -248,7 +254,13 @@ svg.edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
   <div class="ovl glass player" id="player"></div>
 
   <div class="ovl glass keybtn" id="keybox">
-    <button id="keytoggle" aria-expanded="false">Key and shortcuts</button>
+    <div class="keyhdr">
+      <button id="keytoggle" aria-expanded="false" title="Toggle Legend &amp; Shortcuts">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        Legend &amp; Shortcuts
+      </button>
+      <button id="keyclose" class="keyclose" aria-label="Close Legend &amp; Shortcuts" title="Close (Esc)">✕</button>
+    </div>
     <div class="keybody">
       <div><span class="k pk">PK</span>Primary key, underlined</div>
       <div><span class="k fk">FK</span>Foreign key, in italics</div>
@@ -1014,7 +1026,23 @@ $("#zreset").onclick=()=>{
   });
   drawEdges(); placePop(); flyTo(startCam()); toast("Layout reset");
 };
-$("#keytoggle").onclick=()=>{const b=$("#keybox"),o=!b.classList.contains("open");b.classList.toggle("open",o);$("#keytoggle").setAttribute("aria-expanded",o);};
+const keybox=$("#keybox"), keytoggle=$("#keytoggle"), keyclose=$("#keyclose");
+function closeKeybox(){
+  keybox.classList.remove("open");
+  keytoggle.setAttribute("aria-expanded","false");
+}
+function toggleKeybox(){
+  const o=!keybox.classList.contains("open");
+  keybox.classList.toggle("open",o);
+  keytoggle.setAttribute("aria-expanded",o);
+}
+keytoggle.onclick=toggleKeybox;
+keyclose.onclick=closeKeybox;
+document.addEventListener("pointerdown",ev=>{
+  if(keybox.classList.contains("open")&&!ev.target.closest("#keybox")){
+    closeKeybox();
+  }
+});
 
 // Search Autocomplete
 const q=$("#q"), res=$("#results"); let hits=[], act=0;
@@ -1045,7 +1073,12 @@ document.addEventListener("keydown",e=>{
   const typing=e.target&&e.target.matches&&e.target.matches("input");
   if(typing) return;
   if(e.key==="/"){e.preventDefault();q.focus();}
-  else if(e.key==="Escape"){ if(S.sel) closeTable(); else if(S.story) closeStory(); else if(S.group){S.group=null;apply();} }
+  else if(e.key==="Escape"){
+    if(keybox.classList.contains("open")) closeKeybox();
+    else if(S.sel) closeTable();
+    else if(S.story) closeStory();
+    else if(S.group){S.group=null;apply();}
+  }
   else if(e.key==="f"||e.key==="F") flyTo(fitCam());
   else if(e.key==="+"||e.key==="=") cz(1.2);
   else if(e.key==="-") cz(1/1.2);
