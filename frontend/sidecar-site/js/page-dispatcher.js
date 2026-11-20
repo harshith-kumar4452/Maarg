@@ -9,7 +9,7 @@ function dispatcher(root) {
   const sorted = () => SHIPMENTS.slice().sort((a, b) => b.T - a.T);
 
   const body = `
-  <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+  <div class="kpis four">
     <div class="kpi"><span class="k">In queue</span><div class="v num" id="kQ">0</div><span class="d">misplaced shipments</span></div>
     <div class="kpi"><span class="k">Hot zone</span><div class="v num" id="kH">0</div><span class="d dn">T ≥ 67, act first</span></div>
     <div class="kpi"><span class="k">Live auctions</span><div class="v num" id="kA">0</div><span class="d">reverse auctions open</span></div>
@@ -86,11 +86,11 @@ function dispatcher(root) {
       <div class="actions"><button class="btn sm" id="ovGo">Override plan</button></div></div>`;
     $("#ovGo").addEventListener("click", () => {
       const i = +$("#ovSel").value, why = $("#ovWhy").value.trim();
-      if (i === 0) return toast("That is already the engine's pick. Choose another plan to override.");
-      if (why.length < 6) return toast("Add a reason. Every override is written to the audit trail.");
+      if (i === 0) return toast.err("That is already the engine's pick. Choose another plan to override.");
+      if (why.length < 6) return toast.err("Add a reason. Every override is written to the audit trail.");
       const o = p.opts[i];
       if (MAARG.live) {
-        if (!o.planId) return toast("That option has no backend plan to commit.");
+        if (!o.planId) return toast.err("That option has no backend plan to commit.");
         MAARG.api(`/shipments/${s.dbId}/override`, { method: "POST", body: { chosen_plan_id: o.planId, reason: why } }).then(r => {
           logAudit(`<b>${MAARG.esc(who())}</b> overrode <b>${s.id}</b> to ${o.strat.replace("_", "-")} (${MAARG.esc(o.via)}). Reason: “${MAARG.esc(why)}” <small>· audit #${r.audit_log_id}</small>`);
           delete MAARG.state.plans[s.id]; MAARG.fetchPlan(s).then(() => { paintPlan(false); paintOverride(); });
@@ -119,7 +119,7 @@ function dispatcher(root) {
     host.innerHTML = `<p class="leg-sub" style="margin:0 0 10px"><b style="color:var(--ink)">${a.id}</b> for ${s.id} · pickup ${a.pickup}</p>` + BountyUI.monitor(a);
   }
   $("#auction").addEventListener("click", e => {
-    if (e.target.id !== "openA") return;
+    if (!e.target.closest("#openA")) return;
     const a = Bounty.openFor(cur(), "dispatcher"); toast(`Auction ${a.id} opened. ${a.eligible.length} eligible vehicle${a.eligible.length === 1 ? "" : "s"}${a.eligible.includes(Bounty.MINE) ? ", including Truck 12 in the driver app" : ""}.`); paintAuction(true);
   });
   const off = Bounty.onChange(() => paintAuction(true));
@@ -137,7 +137,7 @@ function dispatcher(root) {
   $("#queue").addEventListener("click", e => { const r = e.target.closest("tr[data-id]"); if (r) select(r.dataset.id); });
   $("#queue").addEventListener("keydown", e => { if (e.key === "Enter") { const r = e.target.closest("tr[data-id]"); if (r) select(r.dataset.id); } });
   $("#planText").addEventListener("click", e => {
-    if (e.target.id !== "approveBtn") return;
+    if (!e.target.closest("#approveBtn")) return;
     const s = cur(); if (!s) return;
     if (MAARG.live) {
       const p = planFor(s);

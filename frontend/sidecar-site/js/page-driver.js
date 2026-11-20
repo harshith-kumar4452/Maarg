@@ -45,7 +45,7 @@ function driver(root) {
   /* ================= My route ================= */
   function routeView(el, reg) {
     el.innerHTML = pageHead("My route", `${ME} · Pune → Nagpur → Kolkata · ${DR.name}`, `<span class="pill"><span class="dot live"></span>On trip</span><a class="pill" href="#offers" data-go="offers" id="rtOffers"></a>`) + `
-    <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpis four">
       <div class="kpi"><span class="k">Next stop</span><div class="v" id="kNext" style="font-size:26px">—</div><span class="d" id="kNextD"></span></div>
       <div class="kpi"><span class="k">Free capacity</span><div class="v num" id="kFree">85<small> kg</small></div><div class="bar thin" style="margin-top:6px"><i id="kFreeBar" style="width:17%"></i></div><span class="d" id="kFreeD">of 500 kg</span></div>
       <div class="kpi"><span class="k">Reliability</span><div class="v num">${DR.rel.toFixed(2)}</div><span class="d">score used to rank you in auctions</span></div>
@@ -128,7 +128,7 @@ function driver(root) {
     el.addEventListener("input", e => { const r = e.target.closest("[data-price]"); if (!r) return; const id = r.dataset.price; PRICE[id] = +r.value; $(`[data-priceout="${id}"]`, el).textContent = inr(+r.value); $(`[data-btnprice="${id}"]`, el).textContent = inr(+r.value); });
     el.addEventListener("click", e => {
       const g = e.target.closest("[data-go]"); if (g) return go(g.dataset.go);
-      if (e.target.id === "simOffer") { const a = Bounty.simulateOffer(); toast(`New offer ${a.id} for ${a.ship}` + (a.eligible.includes(ME) ? "" : " (not on your route)")); return; }
+      if (e.target.closest("#simOffer")) { const a = Bounty.simulateOffer(); toast(`New offer ${a.id} for ${a.ship}` + (a.eligible.includes(ME) ? "" : " (not on your route)")); return; }
       const b = e.target.closest("[data-act]"); if (!b) return; const id = b.dataset.id, a = Bounty.get().auctions.find(x => x.id === id);
       if (b.dataset.act === "accept") { const p = PRICE[id] != null ? PRICE[id] : Bounty.driverCost(a).total; if (Bounty.bid(id, p)) toast(`Bid ${inr(Math.min(a.maxB, p))} placed on ${id}. You'll hear when the window closes.`); }
       else if (Bounty.decline(id)) toast(`Declined ${id}. Offered to the next vehicle.`);
@@ -188,7 +188,7 @@ function driver(root) {
       const mx = Math.max(700, ...days.map(d => d.v)), last = L.find(l => Bounty.get().auctions.find(a => a.id === l.id));
       const la = last && Bounty.get().auctions.find(a => a.id === last.id);
       el.innerHTML = pageHead("Earnings", "Every bounty payment, with the bid you placed and what you were actually paid.", `<span class="pill">Paid on delivery</span>`) + `
-      <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpis four">
         <div class="kpi feat"><div><span class="k">Paid, last 7 days</span><div class="v num">${inr(sum(wk))}</div><span class="d">${wk.length} job${wk.length === 1 ? "" : "s"}</span></div></div>
         <div class="kpi"><span class="k">Pending delivery</span><div class="v num">${inr(sum(pend))}</div><span class="d">${pend.length ? "released when you mark delivered" : "nothing pending"}</span></div>
         <div class="kpi"><span class="k">Jobs completed</span><div class="v num">${paid.length}</div><span class="d">all time</span></div>

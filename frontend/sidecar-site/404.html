@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Served for any unknown path, at any depth, so every URL below resolves from the site root. -->
+<base href="/">
+<title>Page not found · MAARG</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#F7F0E3">
+<meta name="description" content="This page does not exist. Head back to MAARG, the AI recovery platform for misplaced shipments.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Lato:wght@400;700&family=Outfit:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="js/art.js"></script>
+<script src="js/session.js"></script>
+<script src="js/common.js"></script>
+<script>
+(function notFound(root) {
+  const acc = Session.account();
+  root.innerHTML = `<div class="wrap" style="padding-top:16px">${navHTML()}</div>
+    <main class="wrap nf"><div>
+      <p class="eyebrow">Error 404</p>
+      <div class="code" aria-hidden="true">404</div>
+      <h1 class="h-section">This shipment took a wrong turn</h1>
+      <p>The page you asked for doesn't exist or has moved. Even MAARG can't recover this one, but these routes are open.</p>
+      <div class="hero-actions">
+        <a class="btn" href="index.html">Back to home ${ic("arrow", "arr")}</a>
+        <a class="btn ghost" href="${acc ? acc.page : "login.html"}">${acc ? "Open my portal" : "Sign in"}</a>
+      </div>
+    </div></main>
+    ${footHTML()}`;
+  wireNav(root);
+})(document.getElementById("app"));
+</script>
+</body>
+</html>

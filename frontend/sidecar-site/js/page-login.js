@@ -73,9 +73,9 @@ function login(root) {
     /* Existing demo check passed. Also sign in to the existing Firebase project with the same account so the
        backend receives a verified ID token. If that fails (e.g. the account is not a Firebase user) the demo
        session continues exactly as before. */
-    $("#err").textContent = "Signing in…";
+    $("#err").textContent = "Signing in…"; $("#err").classList.add("pending");
     (typeof MAARG !== "undefined" ? MAARG.signIn(em, pw) : Promise.resolve({ ok: false, reason: "api.js not loaded" }))
       .then(r => { if (!r.ok) console.info("Firebase sign-in skipped:", r.reason); })
-      .finally(() => { Session.set(role); location.href = a.page; });
+      .finally(() => { Session.set(role); try { sessionStorage.setItem("maarg-welcome", a.name); } catch (x) { } location.href = a.page; });
   });
 }

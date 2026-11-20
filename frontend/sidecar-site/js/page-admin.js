@@ -88,7 +88,7 @@ function viewHeat(el, reg) {
   reg(() => clearInterval(clk));
   $("#injectBtn").addEventListener("click", () => {
     if (MAARG.live) {
-      const l = LEGS.find(x => x.aboard.length) || LEGS[0]; if (!l) return toast("No legs on the network.");
+      const l = LEGS.find(x => x.aboard.length) || LEGS[0]; if (!l) return toast.err("No legs on the network.");
       const t0 = performance.now();
       MAARG.api("/simulate/inject-disruption", { method: "POST", body: { type: "DELAY_VEHICLE", target_id: l.vehicle_id, delay_hours: 2 } })
         .then(() => MAARG.api(`/simulate/cascade/vehicle/${l.vehicle_id}?max_depth=2`, { method: "POST", timeout: 30000 }))
@@ -175,8 +175,8 @@ function viewBounty(el, reg) {
     const li = e.target.closest(".alist-item"); if (li) { sel = li.dataset.id; paintList(); paintMon(); return; }
     const b = e.target.closest("[data-act]");
     if (b) { const id = b.dataset.id; if (b.dataset.act === "ext") { Bounty.extend(id, 120); toast("Extended " + id + " by 2 minutes"); } else { Bounty.closeNow(id); toast(id + " closed early"); } return; }
-    if (e.target.id === "openBtn") { const s = SHIPMENTS.find(x => x.id === $("#openSel").value), a = Bounty.openFor(s, "admin"); sel = a.id; toast(`Auction ${a.id} open for ${s.id}` + (a.eligible.includes(Bounty.MINE) ? ". Truck 12 has the offer in the driver app." : "")); }
-    if (e.target.id === "bReset") { Bounty.reset(); sel = auctions()[0].id; toast("Bounty market reset to the demo data"); }
+    if (e.target.closest("#openBtn")) { const s = SHIPMENTS.find(x => x.id === $("#openSel").value), a = Bounty.openFor(s, "admin"); sel = a.id; toast(`Auction ${a.id} open for ${s.id}` + (a.eligible.includes(Bounty.MINE) ? ". Truck 12 has the offer in the driver app." : "")); }
+    if (e.target.closest("#bReset")) { Bounty.reset(); sel = auctions()[0].id; toast("Bounty market reset to the demo data"); }
   });
   const off = Bounty.onChange(() => { if (!el.isConnected) return; if (!auctions().some(x => x.id === sel)) sel = (auctions()[0] || {}).id; paintAll(); });
   const iv = setInterval(() => {
@@ -198,7 +198,8 @@ function viewHubs(el, reg) {
       <p class="leg-sub" style="margin-top:10px">A gold pin on a hot cell is the reason a hub is proposed there.</p></section>
     <section class="card s5"><div class="card-h"><h2>Candidate hubs</h2><small>ranked by hub score</small></div><div id="candList"></div></section>
     <section class="card s12"><div class="card-h"><h2>Network records</h2><input class="search" id="tblQ" type="search" placeholder="Filter…" aria-label="Filter records"></div>
-      <div class="tabs" role="tablist"><button class="on" data-t="veh" role="tab">Vehicles</button><button data-t="hub" role="tab">Hubs</button><button data-t="usr" role="tab">Users</button><button class="btn sm soft" style="margin-left:auto" id="addBtn">+ Add</button></div>
+      <div class="tabs" role="tablist"><button class="on" data-t="veh" role="tab">Vehicles</button><button data-t="hub" role="tab">Hubs</button><button data-t="usr" role="tab">Users</button><button class="btn sm soft" style="margin-left:auto" id="addBtn" aria-expanded="false" aria-controls="addForm">+ Add</button></div>
+      <form class="add-form" id="addForm" hidden novalidate></form>
       <div class="tbl-wrap" id="tblHost"></div></section>
   </div>`;
   const map = createNetworkMap($("#hubMap"), { hour: AD.hour, legs: false });
@@ -236,14 +237,74 @@ function viewHubs(el, reg) {
       rows = HUBS.filter(h => (h.name + h.id).toLowerCase().includes(q)).map(h => { const r = riskAt(h, AD.hour); return [`<b>${h.name}</b>`, h.id, `<div class="cap-line"><div class="bar thin"><i style="width:${Math.round(r * 100)}%;background:${r > .6 ? "var(--hot)" : r > .35 ? "var(--warm)" : "var(--good)"}"></i></div><span class="num">${r.toFixed(2)}</span></div>`, `<span class="num">${LEGS.filter(l => l.from === h.id || l.to === h.id).length}</span>`]; });
     } else {
       head = ["Name", "Email", "Role", "Last seen"];
-      rows = USERS.filter(u => (u.name + u.email + u.role).toLowerCase().includes(q)).map(u => [`<b>${u.name}</b>`, u.email, `<span class="chip">${u.role}</span>`, u.seen]);
+      rows = USERS.filter(u => (u.name + u.email + u.role).toLowerCase().includes(q)).map(u => [`<b>${u.name}</b>`, `<a href="mailto:${u.email}">${u.email}</a>`, `<span class="chip">${u.role}</span>`, u.seen]);
     }
     $("#tblHost").innerHTML = `<table class="tbl"><thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="5" style="color:var(--ink-3)">No matches.</td></tr>`}</tbody></table>`;
   }
   paintTbl();
   $("#tblQ").addEventListener("input", paintTbl);
-  $$(".tabs [data-t]").forEach(b => b.addEventListener("click", () => { AD.tab = b.dataset.t; $$(".tabs [data-t]").forEach(x => x.classList.toggle("on", x === b)); paintTbl(); }));
-  $("#addBtn").addEventListener("click", () => toast("New " + ({ veh: "vehicle", hub: "hub", usr: "user" })[AD.tab] + " form is coming in the full build"));
+  $$(".tabs [data-t]").forEach(b => b.addEventListener("click", () => { AD.tab = b.dataset.t; $$(".tabs [data-t]").forEach(x => x.classList.toggle("on", x === b)); if (!$("#addForm").hidden) openForm(true); paintTbl(); }));
+  /* "+ Add": a real form per tab. Records join the in-browser tables (and the map, for hubs). */
+  const KIND = { veh: "vehicle", hub: "hub", usr: "user" };
+  const opt = (v, t = v) => `<option value="${v}">${t}</option>`;
+  const hubOpts = () => HUBS.map(h => opt(h.id, h.name)).join("");
+  const FORMS = {
+    veh: () => `<label class="field">Vehicle name<input type="text" name="id" placeholder="Truck 40" required maxlength="24"></label>
+      <label class="field">Type<select name="type">${opt("Owned")}${opt("Third-party")}</select></label>
+      <label class="field">From<select name="from">${hubOpts()}</select></label>
+      <label class="field">To<select name="to">${hubOpts()}</select></label>
+      <label class="field">Capacity (kg)<input type="number" name="tot" min="50" max="40000" step="10" value="500" required></label>`,
+    hub: () => `<label class="field">Hub name<input type="text" name="name" placeholder="Indore" required maxlength="40"></label>
+      <label class="field">Code (3 letters)<input type="text" name="id" placeholder="IDR" required maxlength="3"></label>
+      <label class="field">Latitude<input type="number" name="lat" min="6" max="37" step="0.01" required></label>
+      <label class="field">Longitude<input type="number" name="lon" min="68" max="98" step="0.01" required></label>`,
+    usr: () => `<label class="field">Full name<input type="text" name="name" required maxlength="60"></label>
+      <label class="field">Email<input type="email" name="email" required maxlength="120"></label>
+      <label class="field">Role<select name="role">${["ADMIN", "DISPATCHER", "DRIVER", "CUSTOMER"].map(r => opt(r)).join("")}</select></label>`,
+  };
+  const form = $("#addForm"), addBtn = $("#addBtn");
+  function openForm(show) {
+    form.hidden = !show; addBtn.setAttribute("aria-expanded", show); addBtn.textContent = show ? "Cancel" : "+ Add";
+    if (!show) return;
+    form.innerHTML = FORMS[AD.tab]() + `<p class="form-err" id="addErr" role="alert"></p><div class="actions"><button class="btn sm" type="submit">Add ${KIND[AD.tab]}</button></div>`;
+    form.querySelector("input").focus();
+  }
+  function addRecord(d) {
+    if (AD.tab === "veh") {
+      if (!d.id) return "Give the vehicle a name.";
+      if (VEHICLES.some(v => v.id.toLowerCase() === d.id.toLowerCase())) return `${d.id} is already in the fleet.`;
+      if (d.from === d.to) return "Pick two different hubs for the route.";
+      const tot = +d.tot; if (!(tot >= 50 && tot <= 40000)) return "Capacity must be between 50 and 40,000 kg.";
+      VEHICLES.unshift({ id: d.id, type: d.type, route: hub(d.from).name + " → " + hub(d.to).name, tot, res: tot, rel: .9 });
+      return null;
+    }
+    if (AD.tab === "hub") {
+      const id = (d.id || "").toUpperCase();
+      if (!d.name) return "Give the hub a name.";
+      if (!/^[A-Z]{3}$/.test(id)) return "The code must be exactly 3 letters, like IDR.";
+      if (HUBS.some(h => h.id === id)) return `Code ${id} is already used by ${hub(id).name}.`;
+      const lat = +d.lat, lon = +d.lon;
+      if (d.lat === "" || d.lon === "" || !(lat >= 6 && lat <= 37) || !(lon >= 68 && lon <= 98)) return "Coordinates must be inside India (lat 6–37, lng 68–98).";
+      HUBS.push({ id, name: d.name, lat, lon, base: .3, dx: 9, dy: -4, a: "start" });
+      map.redraw();
+      return null;
+    }
+    if (!d.name) return "Enter the user's name.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email || "")) return "Enter a valid email address.";
+    if (USERS.some(u => u.email.toLowerCase() === d.email.toLowerCase())) return `${d.email} already has an account.`;
+    USERS.unshift({ name: d.name, email: d.email.toLowerCase(), role: d.role, seen: "Just added" });
+    return null;
+  }
+  addBtn.addEventListener("click", () => openForm(form.hidden));
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const d = Object.fromEntries([...new FormData(form)].map(([k, v]) => [k, String(v).trim()]));
+    const err = addRecord(d);
+    if (err) { $("#addErr").textContent = err; toast.err("Could not add the " + KIND[AD.tab] + ". " + err); return; }
+    const label = d.name || d.id;
+    openForm(false); $("#tblQ").value = ""; paintTbl();
+    toast.ok(`${label} added to ${({ veh: "vehicles", hub: "hubs", usr: "users" })[AD.tab]}.`);
+  });
   const th = () => map.redraw(); document.addEventListener("themechange", th); reg(() => document.removeEventListener("themechange", th));
 }
 

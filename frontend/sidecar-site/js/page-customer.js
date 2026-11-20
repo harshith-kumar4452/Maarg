@@ -82,7 +82,7 @@ function customer(root) {
     $("#optList").innerHTML = `<p class="explain-h">Options at this amount</p>` + p.opts.slice().sort((a, b) => a.h - b.h).map(o => { const extra = (o.c + o.hand) - base, un = extra <= P; return `<div class="alt" style="grid-template-columns:auto 1fr auto;${un ? "" : "opacity:.5"}"><span class="strat ${o.strat}">${o.strat.replace("_", "-")}</span><span style="font-size:13.5px">${fmtT(o.h)}</span><span class="num" style="font-size:13px">${o === best ? "engine pick" : extra > 0 ? "+" + inr(extra) : "−" + inr(-extra)}</span></div>`; }).join("");
   }
   $("#premR").addEventListener("input", paintExpedite); paintExpedite();
-  $("#payBtn").addEventListener("click", () => { const P = +$("#premR").value, a = Bounty.expedite(s.id, P); toast(a ? `Expedite of ${inr(P)} sent. MaxBounty on ${a.id} is now ${inr(a.maxB)}, so faster vehicles can bid.` : "Expedite request sent. It feeds the bounty ceiling of the next auction for this shipment."); });
+  $("#payBtn").addEventListener("click", () => { const P = +$("#premR").value; if (!P) return toast.err("Drag the slider to choose how much extra you will pay, then confirm."); const a =Bounty.expedite(s.id, P); toast(a ? `Expedite of ${inr(P)} sent. MaxBounty on ${a.id} is now ${inr(a.maxB)}, so faster vehicles can bid.` : "Expedite request sent. It feeds the bounty ceiling of the next auction for this shipment."); });
 
   /* live map + simulated progress */
   createLiveMap($("#liveMap")).then(ctl => {
